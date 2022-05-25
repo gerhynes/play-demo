@@ -1,4 +1,4 @@
-package controllers.api
+package controllers
 
 import dao.UserDao
 import models.{User, UserForm}
@@ -15,16 +15,20 @@ class UserController @Inject()(val controllerComponents: ControllerComponents, v
 
   def findAll = Action.async {
     val usersFuture = userDao.findAll()
-    usersFuture.map(users => Ok(Json.toJson(users)))
+    usersFuture.map {users =>
+      Ok(Json.toJson(users))
+    }.recover { case e =>
+      InternalServerError
+    }
   }
 
   def findById(id: String) = Action.async {
     val userFuture = userDao.findById(id.toInt)
-    userFuture.map(user => {
-      println(user)
+    userFuture.map { user =>
       Ok(Json.toJson(user))
+    }.recover { case e =>
+      NotFound(s"User $id not found")
     }
-    )
   }
 
   def create = Action.async { implicit request =>
